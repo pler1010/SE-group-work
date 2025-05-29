@@ -58,17 +58,10 @@ def inject_user():
 
 # 导入并注册蓝图
 try:
-    from modules.auth import auth_bp
-    from modules.voice import voice_bp
-    from modules.gesture import gesture_bp
-    from modules.visual import visual_bp
     from modules.system import system_bp
-
+    from modules.auth import auth_bp
+    app.register_blueprint(system_bp, name='system_bp')
     app.register_blueprint(auth_bp, name='auth')
-    app.register_blueprint(voice_bp, name='voice_bp')  # 修复蓝图名称
-    app.register_blueprint(gesture_bp, name='gesture_bp')  # 修复蓝图名称
-    app.register_blueprint(visual_bp, name='visual_bp')  # 修复蓝图名称
-    app.register_blueprint(system_bp, name='system_bp')  # 修复蓝图名称
 except ImportError as e:
     print(f"错误: 导入模块失败: {e}")
     sys.exit(1)
@@ -79,13 +72,6 @@ def index():
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
     return render_template('index.html')  # 确保主页显示多模态交互系统功能
-
-@app.route('/multimodal')
-def multimodal():
-    # 检查用户是否已登录，如果未登录则重定向到登录页面
-    if 'user_id' not in session:
-        return redirect(url_for('auth.login'))
-    return render_template('multimodal.html')
 
 # 添加一个命令行初始化数据库的命令
 @app.cli.command('init-db')
