@@ -1,0 +1,10 @@
+login
+{
+username:none
+password:none
+filepath:none//人脸路径
+}
+logout{}
+register
+control
+logs

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>权限设置 - 多模态交互系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>权限设置</h1>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="{{ url_for('index') }}">首页</a></li>
+                <li><a href="{{ url_for('multimodal') }}">多模态交互</a></li>
+                <li><a href="{{ url_for('system_bp.preferences') }}">个性化设置</a></li>
+                <li><a href="{{ url_for('system_bp.logs') }}">交互日志</a></li>
+                <li><a href="{{ url_for('system_bp.permissions') }}" class="active">权限管理</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">退出登录</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="modal-content">
+            <h2>驾驶员权限</h2>
+            <form id="driver-permissions" action="{{ url_for('system_bp.update_permissions') }}" method="post">
+                <input type="hidden" name="role" value="driver">
+                <div class="form-group">
+                    <label><input type="checkbox" name="control_ac" {% if driver.control_ac %}checked{% endif %}> 控制空调</label>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" name="control_music" {% if driver.control_music %}checked{% endif %}> 控制音乐</label>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" name="control_navigation" {% if driver.control_navigation %}checked{% endif %}> 控制导航</label>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" name="system_settings" {% if driver.system_settings %}checked{% endif %}> 系统设置</label>
+                </div>
+                <button type="submit">保存驾驶员权限</button>
+            </form>
+            
+            <h2>乘客权限</h2>
+            <form id="passenger-permissions" action="{{ url_for('system_bp.update_permissions') }}" method="post">
+                <input type="hidden" name="role" value="passenger">
+                <div class="form-group">
+                    <label><input type="checkbox" name="control_ac" {% if passenger.control_ac %}checked{% endif %}> 控制空调</label>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" name="control_music" {% if passenger.control_music %}checked{% endif %}> 控制音乐</label>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" name="control_navigation" {% if passenger.control_navigation %}checked{% endif %}> 控制导航</label>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" name="system_settings" {% if passenger.system_settings %}checked{% endif %}> 系统设置</label>
+                </div>
+                <button type="submit">保存乘客权限</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

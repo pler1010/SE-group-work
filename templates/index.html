@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多模态交互系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>多模态交互系统</h1>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="{{ url_for('index') }}" class="active">首页</a></li>
+                <li><a href="{{ url_for('multimodal') }}">多模态交互</a></li>
+                <li><a href="{{ url_for('system_bp.preferences') }}">个性化设置</a></li>
+                <li><a href="{{ url_for('system_bp.logs') }}">交互日志</a></li>
+                <li><a href="{{ url_for('system_bp.permissions') }}">权限管理</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">退出登录</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="modal-content">
+            <h2>欢迎, {{ current_user.username }}!</h2>
+            <p>您当前的角色是: {{ current_user.role }}</p>
+            
+            <div class="shortcuts">
+                <h3>系统功能</h3>
+                <div class="shortcut-grid">
+                    <a href="{{ url_for('multimodal') }}" class="shortcut-item">
+                        <h4>多模态交互</h4>
+                        <p>集成语音、手势和视觉的交互系统</p>
+                    </a>
+                    <a href="{{ url_for('system_bp.preferences') }}" class="shortcut-item">
+                        <h4>个性化设置</h4>
+                        <p>自定义您的交互偏好</p>
+                    </a>
+                    <a href="{{ url_for('system_bp.logs') }}" class="shortcut-item">
+                        <h4>交互日志</h4>
+                        <p>查看历史交互记录</p>
+                    </a>
+                    <a href="{{ url_for('system_bp.permissions') }}" class="shortcut-item">
+                        <h4>权限管理</h4>
+                        <p>设置不同角色的权限</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

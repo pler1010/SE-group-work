@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互日志 - 多模态交互系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>交互日志</h1>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="{{ url_for('index') }}">首页</a></li>
+                <li><a href="{{ url_for('multimodal') }}">多模态交互</a></li>
+                <li><a href="{{ url_for('system_bp.preferences') }}">个性化设置</a></li>
+                <li><a href="{{ url_for('system_bp.logs') }}" class="active">交互日志</a></li>
+                <li><a href="{{ url_for('system_bp.permissions') }}">权限管理</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">退出登录</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="modal-content">
+            <h2>交互日志</h2>
+            {% if logs %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>类型</th>
+                            <th>动作</th>
+                            <th>成功</th>
+                            <th>详情</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.created_at }}</td>
+                            <td>{{ log.interaction_type }}</td>
+                            <td>{{ log.action }}</td>
+                            <td>{{ '是' if log.success else '否' }}</td>
+                            <td>{{ log.details }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>暂无交互日志。</p>
+            {% endif %}
+            
+            <h3>统计信息</h3>
+            <ul>
+                <li>语音交互次数: {{ stats.voice_count }}</li>
+                <li>手势交互次数: {{ stats.gesture_count }}</li>
+                <li>视觉交互次数: {{ stats.visual_count }}</li>
+                <li>总交互次数: {{ stats.total }}</li>
+                <li>成功率: {{ stats.success_rate }}%</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
