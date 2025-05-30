@@ -19,13 +19,7 @@ class User:
         return str(self.id)
     
     def has_permission(self, action):
-        if self.role == 'driver':
-            return True
-        else:
-            if not self._permissions:
-                self._permissions = get_permissions_by_role(self.role)
-            return self._permissions.get(action, False)
-
+        return True
 def get_db():
     """获取数据库连接"""
     if 'db' not in g:
@@ -62,19 +56,6 @@ def create_user(username, password, role='passenger'):
     except sqlite3.IntegrityError:
         return None
 
-def get_permissions_by_role(role):
-    """获取角色权限"""
-    db = get_db()
-    permission = db.execute('SELECT * FROM permission WHERE role = ?', (role,)).fetchone()
-    if permission:
-        return {
-            'control_ac': bool(permission['control_ac']),
-            'control_music': bool(permission['control_music']),
-            'control_navigation': bool(permission['control_navigation']),
-            'system_settings': bool(permission['system_settings'])
-        }
-    return {}
-
 def log_interaction(user_id, interaction_type, action, success=True, details=None):
     """记录交互日志"""
     db = get_db()
@@ -82,24 +63,4 @@ def log_interaction(user_id, interaction_type, action, success=True, details=Non
         'INSERT INTO interaction_log (user_id, interaction_type, action, success, details) VALUES (?, ?, ?, ?, ?)',
         (user_id, interaction_type, action, 1 if success else 0, details)
     )
-    db.commit()
-
-def save_user_preference(user_id, preference_type, preference_key, preference_value):
-    """保存用户偏好设置"""
-    db = get_db()
-    existing = db.execute(
-        'SELECT * FROM user_preference WHERE user_id = ? AND preference_type = ? AND preference_key = ?',
-        (user_id, preference_type, preference_key)
-    ).fetchone()
-    
-    if existing:
-        db.execute(
-            'UPDATE user_preference SET preference_value = ?, updated_at = ? WHERE id = ?',
-            (preference_value, datetime.datetime.now(), existing['id'])
-        )
-    else:
-        db.execute(
-            'INSERT INTO user_preference (user_id, preference_type, preference_key, preference_value) VALUES (?, ?, ?, ?)',
-            (user_id, preference_type, preference_key, preference_value)
-        )
     db.commit()

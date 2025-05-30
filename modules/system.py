@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session
-from db_utils import get_user_by_id, save_user_preference, get_db
+from db_utils import get_user_by_id, get_db
 
 system_bp = Blueprint('system', __name__)
 

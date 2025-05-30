@@ -15,20 +15,6 @@ def init_database(db):
     )
     ''')
     
-    # 创建用户偏好表
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS user_preference (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        preference_type TEXT NOT NULL,
-        preference_key TEXT NOT NULL,
-        preference_value TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES user (id)
-    )
-    ''')
-    
     # 创建交互日志表
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS interaction_log (
@@ -41,29 +27,6 @@ def init_database(db):
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES user (id)
     )
-    ''')
-    
-    # 创建权限表
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS permission (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        role TEXT UNIQUE NOT NULL,
-        control_ac INTEGER DEFAULT 0,
-        control_music INTEGER DEFAULT 1,
-        control_navigation INTEGER DEFAULT 0,
-        system_settings INTEGER DEFAULT 0
-    )
-    ''')
-    
-    # 添加默认权限设置
-    cursor.execute('''
-    INSERT OR IGNORE INTO permission (role, control_ac, control_music, control_navigation, system_settings)
-    VALUES ('driver', 1, 1, 1, 1)
-    ''')
-    
-    cursor.execute('''
-    INSERT OR IGNORE INTO permission (role, control_ac, control_music, control_navigation, system_settings)
-    VALUES ('passenger', 0, 1, 0, 0)
     ''')
     
     db.commit()
