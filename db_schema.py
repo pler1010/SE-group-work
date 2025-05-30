@@ -11,7 +11,10 @@ def init_database(db):
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        role TEXT DEFAULT 'passenger'
+        role TEXT DEFAULT 'passenger',
+        air_temperature_preference REAL,         -- 空调温度偏好，可为空
+        music_preference INTEGER,                -- 歌曲喜好（编号，从1开始），可为空
+        window_preference TEXT CHECK (window_preference IN ('half', 'full') OR window_preference IS NULL) -- 车窗偏好，可为空，限制为'hafl'或'full'
     )
     ''')
     

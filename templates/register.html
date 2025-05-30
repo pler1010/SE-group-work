@@ -52,7 +52,27 @@
                     <label for="role">角色:</label>
                     <select id="role" name="role">
                         <option value="driver">驾驶员</option>
-                        <option value="passenger">乘客</option>
+                        <option value="passenger" selected>乘客</option>
+                    </select>
+                </div>
+
+                <!-- 偏好设置字段 -->
+                <div class="form-group">
+                    <label for="air_temperature_preference">空调温度偏好（℃，可选）:</label>
+                    <input type="number" step="0.1" id="air_temperature_preference" name="air_temperature_preference" placeholder="如 22.5">
+                </div>
+
+                <div class="form-group">
+                    <label for="music_preference">歌曲喜好编号（可选）:</label>
+                    <input type="number" id="music_preference" name="music_preference" placeholder="例如 1">
+                </div>
+
+                <div class="form-group">
+                    <label for="window_preference">车窗偏好（可选）:</label>
+                    <select id="window_preference" name="window_preference">
+                        <option value="">-- 请选择 --</option>
+                        <option value="half">半开</option>
+                        <option value="full">全开</option>
                     </select>
                 </div>
 

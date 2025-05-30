@@ -55,11 +55,26 @@ def register():
         role = request.form.get('role', 'passenger')
         face_image = request.files.get('face_image')
 
+        # 获取偏好设置，可为空
+        air_temp = request.form.get('air_temperature_preference')  # 字符串，需转 float
+        music_pref = request.form.get('music_preference')          # 字符串，需转 int
+        window_pref = request.form.get('window_preference')        # 可为 'half', 'full' 或 None
+
+        # 类型转换（空字符串视为 None）
+        air_temp = float(air_temp) if air_temp else None
+        music_pref = int(music_pref) if music_pref else None
+        window_pref = window_pref if window_pref in ('half', 'full') else None
+
         existing_user = get_user_by_username(username)
         if existing_user:
             flash('用户名已存在')
         else:
-            new_user = create_user(username, password, role)
+            new_user = create_user(
+                username, password, role,
+                air_temperature_preference=air_temp,
+                music_preference=music_pref,
+                window_preference=window_pref
+            )
             if new_user:
                 if face_image:
                     image_path = os.path.join(FACE_DIR, f'{username}.jpg')
@@ -70,6 +85,7 @@ def register():
                 flash('创建用户失败，请重试')
 
     return render_template('register.html')
+
 
 @auth_bp.route('/logout')
 def logout():
