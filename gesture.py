@@ -19,3 +19,4 @@ def detect_gesture(video):
     palm（手张开/摆手）
     thumb（大拇指，点赞手势，确认警告）
     '''
+    return ['none','none','up','none','none']

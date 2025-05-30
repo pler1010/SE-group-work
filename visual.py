@@ -16,3 +16,4 @@ def detect_visual(video):
     tired（用户有困意）
     sleepy（用户快睡着了）
     '''
+    return ['none','none','none','tired','none']
