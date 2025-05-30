@@ -1,5 +1,40 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session
 from db_utils import get_user_by_id, get_db
+from gesture import detect_gesture
+from visual import detect_visual
+from voice import detect_voice
+
+class State:
+    def __init__(self):
+        self.air_condition_temperature = '0'
+        self.left_window = 'off'
+        self.right_window = 'off'
+        self.skylight = 'off'
+        self.music = '0'
+        self.alarm = '0'
+    def next_temperature(self,user,ges,voi):
+        pass
+    def next_window(self,user,ges,voi):
+        pass
+    def next_music(self,user,ges,voi):
+        pass
+    def next_alarm(self,vis):
+        pass
+    def get_next(self,user,ges,vis,voi):
+        self.next_temperature(self,user,ges,voi)
+        self.next_window(self,user,ges,voi)
+        self.next_music(self,user,ges,voi)
+        self.next_alarm(self,vis)
+def add(list, time, state):
+    list.append({
+        "time":str(time),
+        "air_condition_temperature":state.air_condition_temperature,
+        "left_window":state.left_window,
+        "right_window":state.right_window,
+        "self.skylight":state.skylight,
+        "self.music":state.music,
+        "self.alarm":state.alarm
+        })
 
 system_bp = Blueprint('system', __name__)
 
@@ -15,8 +50,20 @@ def control():
     video = request.files.get('video')
     if not video:
         return jsonify({"error": "No video uploaded"}), 400
-    # 示例处理逻辑（保存、识别、分析等）
-    result = {"status": "success", "message": "视频已接收", "filename": video.filename}
+    
+    gesture_list=detect_gesture(video)
+    visual_list=detect_visual(video)
+    voice_list=detect_voice(video)
+    length = min(len(gesture_list),len(visual_list),len(voice_list))
+
+    result = []
+    state=State()
+    add(result, state)
+
+    for i in range(length):
+        state.get_next(user,gesture_list[i],visual_list[i],voice_list[i])
+        add(result,5*i,state)
+
     return jsonify(result)
 
 @system_bp.route('/logs')
