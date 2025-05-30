@@ -27,7 +27,7 @@
         <div class="modal-content">
             <h2>欢迎, {{ current_user.username }}!</h2>
             <p>您当前的角色是: {{ current_user.role }}</p>
-            
+
             <div class="shortcuts">
                 <h3>系统功能</h3>
                 <div class="shortcut-grid">
@@ -37,9 +37,40 @@
                     </a>
                 </div>
             </div>
+
+            <!-- 上传视频区域 -->
+            <div class="upload-section">
+                <h3>上传视频进行处理</h3>
+                <form id="video-upload-form">
+                    <input type="file" name="video" id="video-file" accept="video/*" required>
+                    <button type="submit">上传并处理</button>
+                </form>
+                <pre id="json-output" style="margin-top: 1em; background: #f5f5f5; padding: 10px;"></pre>
+            </div>
         </div>
     </div>
-    
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <script>
+    document.getElementById('video-upload-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('video-file');
+        const output = document.getElementById('json-output');
+        const formData = new FormData();
+        formData.append('video', fileInput.files[0]);
+
+        output.textContent = '处理中...';
+
+        try {
+            const response = await fetch('{{ url_for("system_bp.control") }}', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            output.textContent = JSON.stringify(result, null, 4);
+        } catch (error) {
+            output.textContent = '请求失败: ' + error;
+        }
+    });
+    </script>
 </body>
 </html>

@@ -11,6 +11,13 @@ def control():
     current_user = get_user_by_id(session['user_id'])
     if not current_user:
         return jsonify({"success": False, "message": "无效的用户"})
+    
+    video = request.files.get('video')
+    if not video:
+        return jsonify({"error": "No video uploaded"}), 400
+    # 示例处理逻辑（保存、识别、分析等）
+    result = {"status": "success", "message": "视频已接收", "filename": video.filename}
+    return jsonify(result)
 
 @system_bp.route('/logs')
 def logs():
