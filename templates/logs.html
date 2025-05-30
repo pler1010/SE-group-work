@@ -30,7 +30,6 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>时间</th>
                             <th>类型</th>
                             <th>动作</th>
                             <th>成功</th>
@@ -40,7 +39,6 @@
                     <tbody>
                         {% for log in logs %}
                         <tr>
-                            <td>{{ log.created_at }}</td>
                             <td>{{ log.interaction_type }}</td>
                             <td>{{ log.action }}</td>
                             <td>{{ '是' if log.success else '否' }}</td>
