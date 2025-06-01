@@ -282,7 +282,7 @@ def detect_fatigue(input_dir,output_dir, info=[]):
 
 def main():
     #视频转换为图像
-    video_convert2_images(r'./video/1.mp4',r'./visual_detect/images/1/{}.jpg')
+    video_convert2_images(r'./visual_detect/video/1.mp4',r'./visual_detect/images/1/{}.jpg')
 
     # (需要检测的图像文件夹路径,检测结果文件夹路径)
     # detect_fatigue(r'./images/resolution_augment',r'./images/detect_after_resolution_augment')
