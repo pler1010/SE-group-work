@@ -278,6 +278,38 @@ def detect_fatigue(input_dir,output_dir, info=[]):
     return info
 
 
+def video_convert2_images_from_cap(video_cap, convert_image_pattern):
+    n = 1  # 计数
+    if not video_cap.isOpened():
+        print("VideoCapture未打开")
+        return
+    rval, frame = video_cap.read()
+    timeF = 2
+    i = 0
+    while rval:
+        if n % timeF == 0:
+            i += 1
+            print(i)
+            cv2.imwrite(convert_image_pattern.format(i), frame)
+        n += 1
+        rval, frame = video_cap.read()
+
+def detect_fatigue_from_video_cap(video_cap):
+    temp_img_dir = r'./visual_detect/images/temp_from_video'
+    output_dir = r'./visual_detect/images/result_from_video'
+
+    if not os.path.exists(temp_img_dir):
+        os.makedirs(temp_img_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # 视频转换为图片
+    video_convert2_images_from_cap(video_cap, os.path.join(temp_img_dir, '{}.jpg'))
+
+    # 调用已有的图片检测函数
+    info = detect_fatigue(temp_img_dir, output_dir)
+
+    return info
 
 
 def main():
