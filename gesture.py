@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, session, redirec
 import numpy as np
 import cv2
 from db_utils import get_user_by_id, log_interaction
-
+from gesture_detect.gesture_handler import detect_gesture_from_filelike
 def detect_gesture(video):
     '''
     需要做的事情：
@@ -19,4 +19,5 @@ def detect_gesture(video):
     palm（手张开/摆手）
     thumb（大拇指，点赞手势，确认警告）
     '''
-    return ['none','none','up','none','none']
+    # 已按照注释内容实现
+    return detect_gesture_from_filelike(video)
