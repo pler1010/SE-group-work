@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 import os
 import sys
 import sqlite3
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'multimodal_secret_key'
@@ -34,6 +35,38 @@ def init_db():
         db = get_db()
         init_database(db)
         print("数据库初始化完成")
+
+# 添加自定义模板过滤器
+@app.template_filter('datetime_format')
+def datetime_format(value, format='%Y-%m-%d %H:%M:%S'):
+    """安全的日期时间格式化过滤器"""
+    if not value:
+        return '未知时间'
+    
+    try:
+        # 如果是字符串，尝试解析为datetime对象
+        if isinstance(value, str):
+            # 尝试多种日期格式
+            for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%S.%f']:
+                try:
+                    dt = datetime.strptime(value, fmt)
+                    return dt.strftime(format)
+                except ValueError:
+                    continue
+            # 如果都失败了，返回原始字符串
+            return value
+        
+        # 如果已经是datetime对象，直接格式化
+        elif hasattr(value, 'strftime'):
+            return value.strftime(format)
+        
+        # 其他情况返回字符串表示
+        else:
+            return str(value)
+            
+    except Exception as e:
+        print(f"日期格式化错误: {e}, 值: {value}")
+        return str(value) if value else '未知时间'
 
 # 自定义登录验证装饰器
 def login_required(f):

@@ -3,74 +3,1427 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多模态交互系统</title>
+    <title>智能车载AI助手</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        window.showNotification = function(message, type, duration) {
+            type = type || 'info';
+            duration = duration || 3000;
+            
+            console.log('[' + type.toUpperCase() + '] ' + message);
+            
+            var notification = document.createElement('div');
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 10000; padding: 15px 20px; border-radius: 10px; color: white; font-weight: 500; max-width: 400px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); transform: translateX(100%); transition: transform 0.3s ease;';
+            
+            if (type === 'success') {
+                notification.style.background = 'linear-gradient(135deg, #00b894 0%, #00a085 100%)';
+            } else if (type === 'error') {
+                notification.style.background = 'linear-gradient(135deg, #fd79a8 0%, #e84393 100%)';
+            } else if (type === 'warning') {
+                notification.style.background = 'linear-gradient(135deg, #fdcb6e 0%, #e17055 100%)';
+            } else {
+                notification.style.background = 'linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)';
+            }
+            
+            notification.innerHTML = '<div style="display: flex; align-items: center; justify-content: space-between;"><span>' + message + '</span><button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; margin-left: 15px;">×</button></div>';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(function() {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(function() {
+                if (notification.parentNode) {
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(function() {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }
+            }, duration);
+        };
+        
+        window.formatFileSize = function(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            var k = 1024;
+            var sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        };
+    </script>
 </head>
 <body>
-    <header>
+    <header class="glass-header">
         <div class="container">
-            <h1>多模态交互系统</h1>
+            <h1 class="main-title">智能车载AI助手</h1>
         </div>
     </header>
     
-    <nav>
+    <nav class="glass-nav">
         <div class="container">
-            <ul>
-                <li><a href="{{ url_for('index') }}" class="active">首页</a></li>
-                <li><a href="{{ url_for('system_bp.logs') }}">交互日志</a></li>
-                <li><a href="{{ url_for('auth.logout') }}">退出登录</a></li>
+            <ul class="nav-list">
+                <li><a href="{{ url_for('index') }}" class="nav-link active">首页</a></li>
+                <li><a href="{{ url_for('system_bp.logs') }}" class="nav-link">交互日志</a></li>
+                <li><a href="{{ url_for('auth.logout') }}" class="nav-link">退出登录</a></li>
             </ul>
         </div>
     </nav>
     
     <div class="container">
-        <div class="modal-content">
-            <h2>欢迎, {{ current_user.username }}!</h2>
-            <p>您当前的角色是: {{ current_user.role }}</p>
+        <!-- 用户信息卡片 -->
+        <div class="user-card glass-card fade-in">
+            <div class="user-avatar">
+                <div class="avatar-circle">{{ current_user.username[0].upper() }}</div>
+            </div>
+            <div class="user-info">
+                <h2 class="welcome-text">欢迎回来, {{ current_user.username }}</h2>
+                <p class="user-role">角色: {{ '驾驶员' if current_user.role == 'driver' else '乘客' }}</p>
+                <div class="user-preferences">
+                    <span class="pref-item">温度: {{ current_user.air_temperature_preference or '未设置' }}°C</span>
+                    <span class="pref-item">音乐: {{ current_user.music_preference or '未设置' }}</span>
+                    <span class="pref-item">窗户: {{ '半开' if current_user.window_preference == 'half' else '全开' if current_user.window_preference == 'full' else '未设置' }}</span>
+                </div>
+            </div>
+        </div>
 
-            <div class="shortcuts">
-                <h3>系统功能</h3>
+        <div class="main-content glass-card">
+            <!-- 快捷功能 -->
+            <div class="shortcuts-section">
+                <h3 class="section-title">系统功能</h3>
                 <div class="shortcut-grid">
-                    <a href="{{ url_for('system_bp.logs') }}" class="shortcut-item">
-                        <h4>交互日志</h4>
-                        <p>查看历史交互记录</p>
+                    <a href="{{ url_for('system_bp.logs') }}" class="shortcut-card neumorphic-btn">
+                        <div class="shortcut-icon">📊</div>
+                        <div class="shortcut-content">
+                            <h4>交互日志</h4>
+                            <p>查看历史交互记录和统计数据</p>
+                        </div>
                     </a>
                 </div>
             </div>
 
-            <!-- 上传视频区域 -->
-            <div class="upload-section">
-                <h3>上传视频进行处理</h3>
-                <form id="video-upload-form">
-                    <input type="file" name="video" id="video-file" accept="video/*" required>
-                    <button type="submit">上传并处理</button>
-                </form>
-                <pre id="json-output" style="margin-top: 1em; background: #f5f5f5; padding: 10px;"></pre>
+            <!-- 视频分析区域 -->
+            <div class="analysis-section">
+                <h3 class="section-title">视频智能分析</h3>
+                
+                <!-- 上传区域 -->
+                <div class="upload-container">
+                    <form id="video-upload-form" enctype="multipart/form-data" class="upload-form">
+                        <div class="upload-area glass-upload" id="upload-area">
+                            <input type="file" name="video" id="video-file" accept="video/*" required class="file-input">
+                            <label for="video-file" class="upload-label">
+                                <div class="upload-icon">📁</div>
+                                <div class="upload-text">
+                                    <span class="upload-title">选择视频文件</span>
+                                    <span class="upload-subtitle">支持 MP4, AVI, MOV 等格式</span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="button-group">
+                            <button type="submit" id="analyze-button" class="primary-btn liquid-btn" style="display: none;">
+                                <span class="btn-text">开始分析</span>
+                                <div class="btn-bg"></div>
+                            </button>
+                            <button type="button" id="test-connection" class="secondary-btn glass-btn">
+                                <span class="btn-text">测试连接</span>
+                                <div class="btn-bg"></div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 视频播放器 -->
+                <div class="video-player-section glass-section" id="video-player-section">
+                    <div class="video-container">
+                        <video id="video-player" class="video-player" controls>
+                            您的浏览器不支持视频播放
+                        </video>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="video-progress"></div>
+                        </div>
+                    </div>
+                    <div class="video-controls">
+                        <button class="control-btn play-btn" id="play-pause-btn">
+                            <span>播放</span>
+                        </button>
+                        <button class="control-btn restart-btn" id="restart-btn">
+                            <span>重新开始</span>
+                        </button>
+                        <button class="control-btn analyze-btn" id="analyze-btn">
+                            <span>重新分析</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 状态面板 -->
+                <div class="status-panel glass-section" id="status-panel">
+                    <h3 class="panel-title">车辆状态监控</h3>
+                    <div class="alert-info">
+                        <strong>智能警告系统：</strong>
+                        注意力分散(30秒间隔) → 疲劳驾驶(15秒间隔) → 瞌睡状态(5秒间隔，高优先级)
+                    </div>
+                    <div class="status-grid" id="status-grid">
+                        <div class="status-card temp-card" id="temp-card">
+                            <div class="status-header">
+                                <div class="status-icon">🌡️</div>
+                                <h4>空调温度</h4>
+                            </div>
+                            <div class="status-value" id="temp-value">--°C</div>
+                        </div>
+                        <div class="status-card window-card" id="window-card">
+                            <div class="status-header">
+                                <div class="status-icon">🪟</div>
+                                <h4>车窗状态</h4>
+                            </div>
+                            <div class="status-value" id="window-value">--</div>
+                        </div>
+                        <div class="status-card music-card" id="music-card">
+                            <div class="status-header">
+                                <div class="status-icon">🎵</div>
+                                <h4>音乐播放</h4>
+                            </div>
+                            <div class="status-value" id="music-value">--</div>
+                        </div>
+                        <div class="status-card alarm-card" id="alarm-card">
+                            <div class="status-header">
+                                <div class="status-icon">⚠️</div>
+                                <h4>安全状态</h4>
+                            </div>
+                            <div class="status-value" id="alarm-value">正常</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JSON输出 -->
+                <pre id="json-output" class="json-output"></pre>
             </div>
         </div>
     </div>
 
+    <!-- 警告弹窗 -->
+    <div class="alert-modal" id="alert-panel">
+        <div class="alert-content">
+            <h3 id="alert-title" class="alert-title">安全警告</h3>
+            <p id="alert-message" class="alert-message">检测到安全问题</p>
+            <button class="alert-close" id="alert-close">知道了</button>
+        </div>
+    </div>
+
     <script>
-    document.getElementById('video-upload-form').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const fileInput = document.getElementById('video-file');
-        const output = document.getElementById('json-output');
-        const formData = new FormData();
-        formData.append('video', fileInput.files[0]);
+        let analysisData = [];
+        let currentVideo = null;
+        let isPlaying = false;
+        let statusUpdateInterval = null;
+        
+        // 警告状态管理
+        let lastAlarmLevel = 0;
+        let lastAlarmTime = 0;
+        let alarmCount = {
+            1: 0, // 注意力分散计数
+            2: 0, // 疲劳驾驶计数
+            3: 0  // 瞌睡状态计数
+        };
+        
+        // 警告频率控制（秒）
+        var ALARM_INTERVALS = {
+            1: 30,  // 注意力分散：30秒提醒一次
+            2: 15,  // 疲劳驾驶：15秒提醒一次  
+            3: 5    // 瞌睡状态：5秒提醒一次
+        };
 
-        output.textContent = '处理中...';
+        // DOM 元素
+        var uploadForm = document.getElementById('video-upload-form');
+        var videoFile = document.getElementById('video-file');
+        var uploadArea = document.getElementById('upload-area');
+        var videoPlayerSection = document.getElementById('video-player-section');
+        var videoPlayer = document.getElementById('video-player');
+        var statusPanel = document.getElementById('status-panel');
+        var jsonOutput = document.getElementById('json-output');
+        var playPauseBtn = document.getElementById('play-pause-btn');
+        var restartBtn = document.getElementById('restart-btn');
+        var analyzeBtn = document.getElementById('analyze-btn');
+        var videoProgress = document.getElementById('video-progress');
+        var alertPanel = document.getElementById('alert-panel');
+        var alertClose = document.getElementById('alert-close');
+        var testConnectionBtn = document.getElementById('test-connection');
 
-        try {
-            const response = await fetch('{{ url_for("system_bp.control") }}', {
+        // 测试后端连接
+        testConnectionBtn.addEventListener('click', function() {
+            testConnectionBtn.disabled = true;
+            testConnectionBtn.querySelector('.btn-text').textContent = '测试中...';
+            
+            fetch('{{ url_for("system_bp.test") }}')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(result) {
+                if (result.status === 'ok') {
+                    window.showNotification('后端连接正常！', 'success');
+                    jsonOutput.textContent = '✅ 连接测试成功\n' + JSON.stringify(result, null, 2);
+                    jsonOutput.style.display = 'block';
+                } else {
+                    throw new Error('后端响应异常');
+                }
+            })
+            .catch(function(error) {
+                window.showNotification('后端连接失败: ' + error.message, 'error');
+                jsonOutput.textContent = '❌ 连接测试失败\n错误: ' + error.message;
+                jsonOutput.style.display = 'block';
+            })
+            .finally(function() {
+                testConnectionBtn.disabled = false;
+                testConnectionBtn.querySelector('.btn-text').textContent = '测试连接';
+            });
+        });
+
+        // 用户偏好数据
+        const userPreferences = {
+            temperature: {{ current_user.air_temperature_preference or 25 }},
+            music: {{ current_user.music_preference or 1 }},
+            window: '{{ current_user.window_preference or "full" }}'
+        };
+
+        // 文件选择处理
+        videoFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const analyzeButton = document.getElementById('analyze-button');
+            
+            if (file) {
+                uploadArea.classList.add('file-selected');
+                
+                // 更新文件标签显示
+                const uploadTitle = uploadArea.querySelector('.upload-title');
+                const uploadSubtitle = uploadArea.querySelector('.upload-subtitle');
+                uploadTitle.textContent = file.name;
+                uploadSubtitle.textContent = `文件大小: ${formatFileSize(file.size)}`;
+                
+                // 显示分析按钮
+                analyzeButton.style.display = 'block';
+                
+                console.log('文件已选择:', file.name, '大小:', file.size);
+            } else {
+                // 重置状态
+                analyzeButton.style.display = 'none';
+                uploadArea.classList.remove('file-selected');
+            }
+        });
+
+        // 表单提交处理
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('表单提交事件触发');
+            
+            var file = videoFile.files[0];
+            if (!file) {
+                window.showNotification('请先选择视频文件', 'error');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('video', file);
+
+            // 显示处理状态
+            jsonOutput.textContent = '正在处理视频，请稍候...\n这可能需要几分钟时间，请耐心等待。';
+            jsonOutput.style.display = 'block';
+            
+            // 禁用按钮防止重复提交
+            var analyzeButton = document.getElementById('analyze-button');
+            analyzeButton.disabled = true;
+            analyzeButton.querySelector('.btn-text').textContent = '分析中...';
+
+            fetch('{{ url_for("system_bp.control") }}', {
                 method: 'POST',
                 body: formData
+            })
+            .then(function(response) {
+                console.log('响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                }
+                
+                return response.json();
+            })
+            .then(function(result) {
+                console.log('分析结果:', result);
+                
+                analysisData = result;
+                
+                // 显示JSON结果
+                jsonOutput.textContent = JSON.stringify(result, null, 2);
+                
+                // 设置视频播放器
+                setupVideoPlayer(file);
+                
+                // 显示状态面板
+                statusPanel.style.display = 'block';
+                statusPanel.classList.add('fade-in');
+                
+                window.showNotification('视频分析完成！', 'success');
+            })
+            .catch(function(error) {
+                console.error('请求错误:', error);
+                jsonOutput.textContent = '❌ 处理失败: ' + error.message + '\n\n请检查：\n1. 后端服务是否正常运行\n2. 视频文件是否正确\n3. 网络连接是否正常';
+                window.showNotification('分析失败: ' + error.message, 'error');
+            })
+            .finally(function() {
+                // 重新启用按钮
+                analyzeButton.disabled = false;
+                analyzeButton.querySelector('.btn-text').textContent = '开始分析';
             });
-            const result = await response.json();
-            output.textContent = JSON.stringify(result, null, 4);
-        } catch (error) {
-            output.textContent = '请求失败: ' + error;
+        });
+
+        // 设置视频播放器
+        function setupVideoPlayer(file) {
+            var url = URL.createObjectURL(file);
+            videoPlayer.src = url;
+            currentVideo = file;
+            
+            // 重置警告状态
+            lastAlarmLevel = 0;
+            lastAlarmTime = 0;
+            alarmCount = {1: 0, 2: 0, 3: 0};
+            
+            videoPlayerSection.style.display = 'block';
+            videoPlayerSection.classList.add('fade-in');
+            
+            // 视频事件监听
+            videoPlayer.addEventListener('timeupdate', updateVideoProgress);
+            videoPlayer.addEventListener('play', function() {
+                isPlaying = true;
+                playPauseBtn.querySelector('span').textContent = '暂停';
+                startStatusUpdates();
+            });
+            videoPlayer.addEventListener('pause', function() {
+                isPlaying = false;
+                playPauseBtn.querySelector('span').textContent = '播放';
+                stopStatusUpdates();
+            });
+            
+            window.showNotification('视频已加载，可以开始播放', 'success');
         }
-    });
+
+        // 更新视频进度
+        function updateVideoProgress() {
+            if (!videoPlayer.duration) return;
+            
+            const progress = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+            videoProgress.style.width = progress + '%';
+            
+            // 更新状态显示
+            updateStatus();
+        }
+
+        // 开始状态更新
+        function startStatusUpdates() {
+            if (statusUpdateInterval) clearInterval(statusUpdateInterval);
+            statusUpdateInterval = setInterval(() => {
+                updateStatus();
+            }, 1000);
+        }
+
+        // 停止状态更新
+        function stopStatusUpdates() {
+            if (statusUpdateInterval) {
+                clearInterval(statusUpdateInterval);
+                statusUpdateInterval = null;
+            }
+        }
+
+        // 更新状态显示
+        function updateStatus() {
+            if (!analysisData.length || !videoPlayer.currentTime) return;
+            
+            const currentTime = Math.floor(videoPlayer.currentTime);
+            const currentData = findDataForTime(currentTime);
+            
+            if (currentData) {
+                updateTemperatureStatus(currentData);
+                updateWindowStatus(currentData);
+                updateMusicStatus(currentData);
+                updateAlarmStatus(currentData);
+            }
+        }
+
+        // 根据时间查找对应数据
+        function findDataForTime(currentTime) {
+            for (let i = analysisData.length - 1; i >= 0; i--) {
+                if (parseInt(analysisData[i].time) <= currentTime) {
+                    return analysisData[i];
+                }
+            }
+            return null;
+        }
+
+        // 更新温度状态
+        function updateTemperatureStatus(data) {
+            const tempCard = document.getElementById('temp-card');
+            const tempValue = document.getElementById('temp-value');
+            
+            if (data.air_condition_temperature === '0') {
+                tempValue.textContent = '关闭';
+                tempCard.className = 'status-card temp-card';
+            } else {
+                tempValue.textContent = data.air_condition_temperature + '°C';
+                tempCard.className = 'status-card temp-card active';
+            }
+        }
+
+        // 更新车窗状态
+        function updateWindowStatus(data) {
+            const windowCard = document.getElementById('window-card');
+            const windowValue = document.getElementById('window-value');
+            
+            const leftStatus = getWindowStatusText(data.left_window);
+            const rightStatus = getWindowStatusText(data.right_window);
+            const skylightStatus = getWindowStatusText(data.skylight);
+            
+            let statusText = '';
+            if (leftStatus !== '关闭' || rightStatus !== '关闭') {
+                statusText = `左:${leftStatus} 右:${rightStatus}`;
+            } else if (skylightStatus !== '关闭') {
+                statusText = `天窗:${skylightStatus}`;
+            } else {
+                statusText = '全部关闭';
+            }
+            
+            windowValue.textContent = statusText;
+            windowCard.className = 'status-card window-card';
+        }
+
+        // 获取车窗状态文本
+        function getWindowStatusText(status) {
+            switch(status) {
+                case 'half': return '半开';
+                case 'on': return userPreferences.window === 'half' ? '半开' : '全开';
+                case 'off': return '关闭';
+                default: return '关闭';
+            }
+        }
+
+        // 更新音乐状态
+        function updateMusicStatus(data) {
+            const musicCard = document.getElementById('music-card');
+            const musicValue = document.getElementById('music-value');
+            
+            let statusText = '';
+            if (data.music === 'stop') {
+                statusText = '停止';
+                musicCard.className = 'status-card music-card';
+            } else if (data.music === 'next') {
+                statusText = '下一首';
+                musicCard.className = 'status-card music-card active';
+            } else if (data.music === 'pre') {
+                statusText = '上一首';
+                musicCard.className = 'status-card music-card active';
+            } else if (data.music.startsWith('start')) {
+                const songNumber = data.music.replace('start', '') || userPreferences.music;
+                statusText = `播放歌曲${songNumber}`;
+                musicCard.className = 'status-card music-card active';
+            } else {
+                statusText = '未知';
+                musicCard.className = 'status-card music-card';
+            }
+            
+            musicValue.textContent = statusText;
+        }
+
+        // 更新警告状态
+        function updateAlarmStatus(data) {
+            const alarmCard = document.getElementById('alarm-card');
+            const alarmValue = document.getElementById('alarm-value');
+            
+            const alarmLevel = parseInt(data.alarm);
+            const alarmDetail = data.alarm_detail || '';
+            const currentTime = Date.now();
+            
+            // 更新显示状态
+            switch(alarmLevel) {
+                case 0:
+                    alarmValue.textContent = '正常';
+                    alarmCard.className = 'status-card alarm-card';
+                    // 重置所有计数器
+                    lastAlarmLevel = 0;
+                    lastAlarmTime = 0;
+                    alarmCount = {1: 0, 2: 0, 3: 0};
+                    break;
+                case 1:
+                    // 显示具体的危险行为
+                    const displayText = alarmDetail || '注意力分散';
+                    alarmValue.textContent = displayText;
+                    alarmCard.className = 'status-card alarm-card warning';
+                    
+                    // 根据具体行为调整警告消息
+                    let warningTitle = '注意力警告';
+                    let warningMessage = '请专心驾驶！';
+                    
+                    if (alarmDetail.includes('玩手机')) {
+                        warningTitle = '危险行为警告';
+                        warningMessage = '检测到您在驾驶时使用手机，请立即停止！';
+                    } else if (alarmDetail.includes('抽烟')) {
+                        warningTitle = '危险行为警告';
+                        warningMessage = '检测到您在驾驶时抽烟，请注意安全！';
+                    } else if (alarmDetail.includes('喝水')) {
+                        warningTitle = '分心警告';
+                        warningMessage = '检测到您在驾驶时喝水，请小心驾驶！';
+                    }
+                    
+                    handleAlarmNotification(1, currentTime, warningTitle, warningMessage);
+                    break;
+                case 2:
+                    alarmValue.textContent = alarmDetail || '疲劳驾驶';
+                    alarmCard.className = 'status-card alarm-card danger';
+                    handleAlarmNotification(2, currentTime, '疲劳警告', '检测到疲劳驾驶，建议适当休息！');
+                    break;
+                case 3:
+                    alarmValue.textContent = alarmDetail || '瞌睡状态';
+                    alarmCard.className = 'status-card alarm-card critical';
+                    handleAlarmNotification(3, currentTime, '危险警告', '检测到瞌睡状态，请立即停车休息！');
+                    break;
+                default:
+                    alarmValue.textContent = '未知';
+                    alarmCard.className = 'status-card alarm-card';
+            }
+        }
+
+        // 处理警告通知的频率控制
+        function handleAlarmNotification(level, currentTime, title, message) {
+            const timeSinceLastAlarm = (currentTime - lastAlarmTime) / 1000; // 转为秒
+            
+            // 判断是否需要显示警告
+            let shouldShowAlert = false;
+            
+            if (level > lastAlarmLevel) {
+                // 警告级别升高，立即显示
+                shouldShowAlert = true;
+                alarmCount[level] = 1;
+            } else if (level === lastAlarmLevel) {
+                // 相同级别，检查时间间隔
+                if (timeSinceLastAlarm >= ALARM_INTERVALS[level]) {
+                    shouldShowAlert = true;
+                    alarmCount[level]++;
+                }
+            } else if (level < lastAlarmLevel) {
+                // 警告级别降低，如果不是0级别，可以显示一次
+                if (level > 0 && timeSinceLastAlarm >= ALARM_INTERVALS[level]) {
+                    shouldShowAlert = true;
+                    alarmCount[level] = 1;
+                }
+            }
+            
+            if (shouldShowAlert) {
+                // 根据警告次数调整消息内容
+                let enhancedMessage = message;
+                if (alarmCount[level] > 1) {
+                    enhancedMessage += ` (第${alarmCount[level]}次提醒)`;
+                }
+                
+                // 根据级别调整显示时间
+                const alertDuration = level === 3 ? 8000 : level === 2 ? 6000 : 4000;
+                
+                showAlert(title, enhancedMessage, alertDuration);
+                
+                // 更新状态
+                lastAlarmLevel = level;
+                lastAlarmTime = currentTime;
+                
+                // 在控制台输出调试信息
+                console.log(`警告级别: ${level}, 第${alarmCount[level]}次, 间隔: ${timeSinceLastAlarm.toFixed(1)}秒`);
+            }
+        }
+
+        // 显示警告弹窗（增强版）
+        function showAlert(title, message, duration = 5000) {
+            const alertPanel = document.getElementById('alert-panel');
+            const alertTitle = document.getElementById('alert-title');
+            const alertMessage = document.getElementById('alert-message');
+            
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            
+            // 如果已经显示警告，先关闭再显示新的
+            if (alertPanel.classList.contains('show')) {
+                alertPanel.classList.remove('show');
+                setTimeout(() => {
+                    alertPanel.classList.add('show');
+                }, 100);
+            } else {
+                alertPanel.classList.add('show');
+            }
+            
+            // 自动关闭
+            setTimeout(() => {
+                alertPanel.classList.remove('show');
+            }, duration);
+            
+            // 发送桌面通知（如果用户允许）
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: '/favicon.ico',
+                    tag: 'driving-alert' // 避免重复通知
+                });
+            }
+        }
+
+        // 请求通知权限
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        window.showNotification('浏览器通知已启用', 'success');
+                    }
+                });
+            }
+        }
+
+        // 控制按钮事件
+        playPauseBtn.addEventListener('click', function() {
+            if (isPlaying) {
+                videoPlayer.pause();
+            } else {
+                videoPlayer.play();
+            }
+        });
+
+        restartBtn.addEventListener('click', function() {
+            videoPlayer.currentTime = 0;
+            updateStatus();
+        });
+
+        analyzeBtn.addEventListener('click', function() {
+            if (currentVideo) {
+                // 重新分析当前视频
+                var form = new FormData();
+                form.append('video', currentVideo);
+                uploadForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // 关闭警告弹窗
+        alertClose.addEventListener('click', function() {
+            alertPanel.classList.remove('show');
+        });
+
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', function() {
+            stopStatusUpdates();
+            if (videoPlayer.src) {
+                URL.revokeObjectURL(videoPlayer.src);
+            }
+        });
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 请求通知权限
+            requestNotificationPermission();
+            
+            // 显示欢迎信息
+            setTimeout(function() {
+                window.showNotification('智能车载AI助手已启动', 'info', 2000);
+            }, 1000);
+        });
     </script>
+
+    <style>
+        /* CSS变量定义 */
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #f9fafb;
+            --bg-secondary: #ffffff;
+            --border-color: #e5e7eb;
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --shadow-light: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --backdrop-blur: blur(4px);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Glassmorphism效果 */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur);
+            -webkit-backdrop-filter: var(--backdrop-blur);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-light);
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .glass-nav {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        /* 头部样式 */
+        .main-title {
+            text-align: center;
+            padding: 25px 0;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 导航样式 */
+        .nav-list {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 0;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 12px 24px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        /* 用户卡片 */
+        .user-card {
+            padding: 30px;
+            margin: 30px 0;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-avatar {
+            position: relative;
+        }
+
+        .avatar-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .welcome-text {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .user-role {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        .user-preferences {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .pref-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: var(--text-primary);
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* 快捷功能 */
+        .shortcuts-section {
+            margin-bottom: 40px;
+        }
+
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .shortcut-card {
+            background: linear-gradient(135deg, var(--glass-bg), rgba(255, 255, 255, 0.1));
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .shortcut-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .shortcut-icon {
+            font-size: 2rem;
+        }
+
+        .shortcut-content h4 {
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        .shortcut-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* 上传区域 */
+        .upload-container {
+            margin-bottom: 40px;
+        }
+
+        .upload-form {
+            text-align: center;
+        }
+
+        .glass-upload {
+            border: 2px dashed var(--glass-border);
+            border-radius: 20px;
+            padding: 50px 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        .glass-upload:hover {
+            border-color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .glass-upload.file-selected {
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+        }
+
+        .upload-text {
+            text-align: center;
+        }
+
+        .upload-title {
+            display: block;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .upload-subtitle {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* 按钮组 */
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* 现代按钮效果 */
+        .primary-btn, .secondary-btn {
+            position: relative;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            min-width: 160px;
+        }
+
+        /* Liquid Button Effect */
+        .liquid-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .liquid-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .liquid-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Glass Button Effect */
+        .glass-btn {
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-2px);
+        }
+
+        .btn-text {
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: inherit;
+        }
+
+        .primary-btn:hover .btn-bg {
+            opacity: 0.1;
+        }
+
+        /* 视频播放器 */
+        .glass-section {
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .video-container {
+            position: relative;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .video-player {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .video-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-2px);
+        }
+
+        /* 状态面板 */
+        .panel-title {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .status-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-card.active {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success-color);
+        }
+
+        .status-card.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--warning-color);
+        }
+
+        .status-card.danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--danger-color);
+        }
+
+        .status-card.critical {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger-color);
+            animation: pulse 2s infinite;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-icon {
+            font-size: 1.5rem;
+        }
+
+        .status-header h4 {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .status-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* 警告弹窗 */
+        .alert-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .alert-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .alert-content {
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            text-align: center;
+            min-width: 400px;
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        .alert-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--danger-color);
+            margin-bottom: 15px;
+        }
+
+        .alert-message {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .alert-close {
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .alert-close:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        }
+
+        /* JSON输出 */
+        .json-output {
+            background: rgba(30, 41, 59, 0.9);
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .main-title {
+                font-size: 2rem;
+            }
+
+            .nav-list {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .user-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .user-preferences {
+                justify-content: center;
+            }
+
+            .main-content {
+                padding: 25px;
+            }
+
+            .glass-upload {
+                padding: 30px 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .primary-btn, .secondary-btn {
+                width: 100%;
+                max-width: 280px;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .alert-content {
+                min-width: 90%;
+                padding: 30px 20px;
+            }
+
+            .video-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .control-btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-title {
+                font-size: 1.8rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .upload-icon {
+                font-size: 2.5rem;
+            }
+
+            .upload-title {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
 </body>
 </html>

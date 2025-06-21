@@ -19,5 +19,11 @@ def detect_gesture(video):
     palm（手张开/摆手）
     thumb（大拇指，点赞手势，确认警告）
     '''
+<<<<<<< HEAD
     # 已按照注释内容实现
     return detect_gesture_from_filelike(video)
+=======
+    res = detect_gesture_from_filelike(video)
+    print(res)
+    return res
+>>>>>>> 67613f0 (Complete the final modifications and upload the complete code)
